@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Button, Text, Box } from '@chakra-ui/react';
+import { Button, Text, Box, useToast } from '@chakra-ui/react';
 import { ethers } from 'ethers';
 
 export function WalletConnector() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
+  const toast = useToast();
 
   const connectWallet = async () => {
     if (typeof window !== 'undefined' && (window as any).ethereum && (window as any).ethereum.isMetaMask) {
@@ -16,18 +17,38 @@ export function WalletConnector() {
 
         const balanceBigInt = await provider.getBalance(address);
         const balanceInEth = ethers.formatEther(balanceBigInt);
-        setBalance(parseFloat(balanceInEth).toFixed(4)); 
+        setBalance(parseFloat(balanceInEth).toFixed(4));
+
+        toast({
+          title: 'Carteira conectada!',
+          description: `Endereço: ${address}`,
+          status: 'success',
+          duration: 4000,
+          isClosable: true,
+        });
       } catch (err) {
-        console.error('Erro ao conectar carteira:', err);
+        toast({
+          title: 'Erro ao conectar carteira',
+          description: `${(err as Error).message}`,
+          status: 'error',
+          duration: 4000,
+          isClosable: true,
+        });
       }
     } else {
-      alert('MetaMask não encontrada. Instale a extensão.');
+      toast({
+        title: 'MetaMask não encontrada',
+        description: 'Instale a extensão para continuar',
+        status: 'warning',
+        duration: 4000,
+        isClosable: true,
+      });
     }
   };
 
   return (
     <Box textAlign="center" mt="10">
-      <Button colorScheme="teal" onClick={connectWallet}>
+      <Button colorScheme="teal" onClick={connectWallet} isLoading={false}>
         Conectar carteira
       </Button>
       {walletAddress && (
